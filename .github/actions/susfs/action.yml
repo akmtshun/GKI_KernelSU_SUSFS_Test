@@ -31,27 +31,15 @@ runs:
 
         SUSFS_BRANCH="gki-${{ inputs.version }}"
         SUSFS_REPO="https://gitlab.com/simonpunk/susfs4ksu.git"        
+        COMMITS_JSON="${{ github.workspace }}/.github/config/commits.json"
 
         echo "Preparing SUSFS for branch: $SUSFS_BRANCH"
         echo "Cloning latest from $SUSFS_BRANCH..."
         git clone "$SUSFS_REPO" -b "$SUSFS_BRANCH" susfs4ksu
 
-        if [ -n "${{ inputs.susfs_commit }}" ]; then
-          echo "Checking out SUSFS commit: ${{ inputs.susfs_commit }}"
-          cd ${{ github.workspace }}/susfs4ksu
-          git checkout "${{ inputs.susfs_commit }}"
-        fi
-
-        cd susfs4ksu
-        
-        COMMIT1="8d2420be13e43d4cc0d80215d08ed475081a1404"                    # fill in
-        COMMIT2="ee71ca33d08710d686f2bdba27cacefe9e615fb9"                    # fill in
-
-        git remote add pershoot https://gitlab.com/pershoot/susfs4ksu.git
-        git fetch pershoot gki-android14-6.1-dev
-
-        git cherry-pick "$COMMIT1"
-        git cherry-pick "$COMMIT2"
+        SUSFS_COMMIT=$(jq -er --arg key "$SUSFS_BRANCH" '.susfs[$key]' "$COMMITS_JSON")
+        cd ${{ github.workspace }}/susfs4ksu
+        git checkout "$SUSFS_COMMIT"
 
     - name: Enable Kernel Configs
       uses: ./.github/actions/set-kernel-config
